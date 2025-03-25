@@ -1,60 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>3D iPhone Animation</title>
-    <style>
-      body {
-        margin: 0;
-        overflow: hidden;
-      }
-      canvas {
-        display: block;
-      }
-    </style>
-  </head>
-  <body>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-      // Scene Setup
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
+<html>
+<head>
+  <title>Scrollable iPhone</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: transparent; }
+    #phone-container { width: 300px; height: 600px; position: relative; }
+    #screen { position: absolute; width: 84%; height: 93%; top: 3.5%; left: 8%; overflow: hidden; }
+    .screen-page { width: 100%; height: 100%; position: absolute; }
+  </style>
+</head>
+<body>
+  <div id="phone-container">
+    <!-- 3D iPhone will render here -->
+    <div id="screen">
+      <div class="screen-page" id="page1"><img src="screen1.jpg" style="width:100%;height:100%;object-fit:contain;"></div>
+      <div class="screen-page" id="page2"><img src="screen2.jpg" style="width:100%;height:100%;object-fit:contain;"></div>
+      <div class="screen-page" id="page3"><img src="screen3.jpg" style="width:100%;height:100%;object-fit:contain;"></div>
+    </div>
+  </div>
 
-      // Add Light to Scene
-      const light = new THREE.AmbientLight(0x404040); // Ambient light
-      scene.add(light);
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // 1. Set up scene
+    const container = document.getElementById('phone-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(30, 300/600, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(300, 600);
+    container.prepend(renderer.domElement);
 
-      // Create iPhone Geometry (A simple rectangle for demonstration)
-      const iphoneGeometry = new THREE.BoxGeometry(1.5, 3, 0.1);
-      const iphoneMaterial = new THREE.MeshBasicMaterial({ color: 0x555555, wireframe: true });
-      const iphone = new THREE.Mesh(iphoneGeometry, iphoneMaterial);
-      scene.add(iphone);
+    // 2. Create iPhone model
+    const bodyGeometry = new THREE.BoxGeometry(1.5, 3, 0.15);
+    const bodyMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x333333,
+      specular: 0x555555,
+      shininess: 50
+    });
+    const iphone = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    scene.add(iphone);
 
-      // Camera Position
-      camera.position.z = 5;
+    // 3. Add screen cutout (transparent)
+    const screenGeometry = new THREE.PlaneGeometry(1.4, 2.8);
+    const screenMaterial = new THREE.MeshBasicMaterial({ 
+      transparent: true,
+      opacity: 0
+    });
+    const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+    screen.position.z = 0.08;
+    iphone.add(screen);
 
-      // Animation Loop
-      const animate = function () {
-        requestAnimationFrame(animate);
+    // 4. Add lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1, 1, 2);
+    scene.add(directionalLight);
 
-        // Simple Animation: Rotate the iPhone
-        iphone.rotation.x += 0.01;
-        iphone.rotation.y += 0.01;
+    // 5. Position camera
+    camera.position.z = 5;
 
-        renderer.render(scene, camera);
-      };
-      animate();
-
-      // Handle Window Resizing
-      window.addEventListener('resize', () => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
+    // 6. Screen scrolling logic
+    let currentPage = 1;
+    const totalPages = 3;
+    
+    function showPage(pageNum) {
+      document.querySelectorAll('.screen-page').forEach((page, index) => {
+        page.style.transform = `translateX(${(index+1 - pageNum) * 100}%)`;
       });
-    </script>
-  </body>
+    }
+    
+    // Auto-scroll every 3 seconds
+    setInterval(() => {
+      currentPage = currentPage % totalPages + 1;
+      showPage(currentPage);
+    }, 3000);
+
+    // 7. Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      iphone.rotation.y += 0.005; // Slower rotation
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
 </html>
