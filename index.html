@@ -54,6 +54,17 @@
         });
 
         init();
+
+        let scrollY = 0;
+
+      window.addEventListener("scroll", () => {
+          scrollY = window.scrollY / 500; // Normalize scroll
+          if (iphone) {
+              iphone.rotation.y = scrollY * Math.PI * 2; // Rotate iPhone
+              iphone.position.y = -scrollY * 2; // Move iPhone up/down
+          }
+      });
+
     </script>
 </body>
 </html>
